@@ -44,10 +44,8 @@ func (self *Queue) PublishMessages(message string) error {
 	return err
 }
 
-func NewQueue(queueName, accessKey, secretKey, region string) (*Queue, error) {
+func NewQueue(queueName string, auth aws.Auth, region string) (*Queue, error) {
 	queue := new(Queue)
-
-	auth := aws.Auth{AccessKey: accessKey, SecretKey: secretKey}
 	queue.service = goamz_sqs.New(auth, aws.Regions[region])
 
 	// TODO: Figure out how to make sure we don't duplicate this across things?
