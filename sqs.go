@@ -1,15 +1,15 @@
 package sqs
 
 import (
-	"time"
-	"log"
 	"github.com/crowdmob/goamz/aws"
 	goamz_sqs "github.com/crowdmob/goamz/sqs"
+	"log"
+	"time"
 )
 
 const (
 	DefaultMessagesToDequeue = 1
-	DefaultBatchSize = 10
+	DefaultBatchSize         = 10
 )
 
 // Takes an array and turns it in to chunks of size size. i.e. if size is 10
@@ -30,7 +30,7 @@ func chunk(arr []string, size int) [][]string {
 	var current []string
 
 	for i := range arr {
-		if i % size == 0 {
+		if i%size == 0 {
 			current = make([]string, size)
 			results = append(results, current)
 
@@ -39,7 +39,7 @@ func chunk(arr []string, size int) [][]string {
 			}
 		}
 
-		current[i % size] = arr[i]
+		current[i%size] = arr[i]
 	}
 
 	return results
@@ -47,8 +47,8 @@ func chunk(arr []string, size int) [][]string {
 
 type Queue struct {
 	service *goamz_sqs.SQS
-	queue *goamz_sqs.Queue
-	ch chan string
+	queue   *goamz_sqs.Queue
+	ch      chan string
 }
 
 func (self *Queue) runReadMessages(ch chan string) {
@@ -107,17 +107,13 @@ func (self *Queue) PublishMessages(messages []string) error {
 	return nil
 }
 
-func NewQueue(queueName string, auth aws.Auth, region string) (*Queue, error) {
+func NewQueue(queueName, accessKey, secretKey, region string) (*Queue, error) {
 	queue := new(Queue)
-	queue.service = goamz_sqs.New(auth, aws.Regions[region])
+	queue.service = goamz_sqs.New(aws.Auth{AccessKey: accessKey, SecretKey: secretKey}, aws.Regions[region])
 
 	// TODO: Figure out how to make sure we don't duplicate this across things?
 	// Might not be a big deal.
-	q, err := queue.service.CreateQueue(queueName)
-
-	if err != nil {
-		return nil, err
-	}
+	q := queue.service.QueueFromArn(queueName)
 
 	queue.queue = q
 	queue.ch = make(chan string)
